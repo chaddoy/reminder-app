@@ -6,14 +6,15 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Form from './Form';
 import Reminders from './Reminders';
 import { TReminder } from './App.types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { Subscription } from 'expo-modules-core';
+import * as Device from 'expo-device';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -25,6 +26,11 @@ Notifications.setNotificationHandler({
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
+  const [_expoPushToken, setExpoPushToken] = useState('');
+  const [_notification, setNotification] =
+    useState<Notifications.Notification>();
+  const notificationListener = useRef<Subscription>();
+  const responseListener = useRef<Subscription>();
 
   const [reminders, setReminders] = useState<TReminder[]>([]);
   const [openForm, setOpenForm] = useState(false);
@@ -38,79 +44,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    async function configurePushNotifications() {
-      const { status } = await Notifications.getPermissionsAsync();
-      let finalStatus = status;
-
-      if (finalStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        Alert.alert(
-          'Permission required',
-          'Push notifications need the appropriate permissions.',
-        );
-        return;
-      }
-
-      const pushTokenData = await Notifications.getExpoPushTokenAsync();
-      console.log(pushTokenData);
-
-      if (Platform.OS === 'android') {
-        Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.DEFAULT,
-        });
-      }
-    }
-
-    configurePushNotifications();
-  }, []);
-
-  useEffect(() => {
-    const subscription1 = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        console.log('NOTIFICATION RECEIVED');
-        console.log(notification);
-        const data = notification.request.content.data;
-        console.log('subscription1', data);
-      },
+    registerForPushNotificationsAsync().then((token = '') =>
+      setExpoPushToken(token),
     );
 
-    const subscription2 = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        console.log('NOTIFICATION RESPONSE RECEIVED');
-        console.log(response);
-        const data = response.notification.request.content.data;
-        console.log('subscription2', data);
-      },
-    );
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log('response', response);
+      });
 
     return () => {
-      subscription1.remove();
-      subscription2.remove();
+      Notifications.removeNotificationSubscription(
+        notificationListener.current as Subscription,
+      );
+      Notifications.removeNotificationSubscription(
+        responseListener.current as Subscription,
+      );
     };
   }, []);
-
-  function toSeconds(hours: number, minutes: number, seconds: number) {
-    return hours * 3600 + minutes * 60 + seconds;
-  }
-
-  async function scheduleNotificationHandler(data: TReminder) {
-    return await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Hey! Just a heads up! 👋',
-        body: data.name,
-        data,
-      },
-      trigger: {
-        seconds: toSeconds(data.hours, data.minutes, data.seconds),
-        repeats: data.repeat,
-      },
-    });
-  }
 
   const getData = async () => {
     try {
@@ -133,13 +89,10 @@ export default function App() {
   };
 
   const showNotification = async () => {
-    const getAllScheduledNotificationsAsync =
+    const scheduledNotif =
       await Notifications.getAllScheduledNotificationsAsync();
-    console.log('Notifications', getAllScheduledNotificationsAsync);
+    console.log('scheduledNotif', scheduledNotif);
   };
-
-  const cancelNotification = async (identifier: string = '') =>
-    await Notifications.cancelScheduledNotificationAsync(identifier);
 
   if (!isLoadingComplete) {
     return null;
@@ -188,10 +141,8 @@ export default function App() {
                   setEditReminder(undefined);
                 }}
                 onSave={async (reminder) => {
-                  const identifier = await scheduleNotificationHandler(
-                    reminder,
-                  );
-                  console.log('identifier', identifier);
+                  const identifier = await schedulePushNotification(reminder);
+
                   if (reminders.some((r) => r.id === reminder.id)) {
                     setReminders((rs) => {
                       const newReminders = rs.map((r) =>
@@ -271,4 +222,59 @@ export default function App() {
       </SafeAreaProvider>
     );
   }
+}
+
+function toSeconds(hours: number, minutes: number, seconds: number) {
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+async function schedulePushNotification(data: TReminder) {
+  return await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Hey! Just a heads up! 👋',
+      body: data.name,
+      data,
+    },
+    trigger: {
+      seconds: toSeconds(data.hours, data.minutes, data.seconds),
+      repeats: data.repeat,
+    },
+  });
+}
+
+async function cancelNotification(identifier: string = '') {
+  await Notifications.cancelScheduledNotificationAsync(identifier);
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log('token', token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  return token;
 }
