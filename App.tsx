@@ -120,7 +120,9 @@ export default function App() {
               }}
             >
               {openForm
-                ? `${editReminder ? 'Edit' : 'Create'} a reminder`
+                ? editReminder
+                  ? 'Reminder'
+                  : 'Create a reminder'
                 : 'Reminders'}
             </Text>
 

@@ -44,25 +44,16 @@ export default function Reminder({
               <View
                 style={{
                   display: 'flex',
-                  alignItems: 'flex-end',
+                  flexDirection: 'row',
+                  alignItems: 'center',
                 }}
               >
-                <Text
-                  style={{
-                    color: 'white',
-                    fontFamily: 'raleway-regular',
-                    fontSize: 20,
-                  }}
-                >
-                  {`${hours}h ${minutes}m`}
-                </Text>
-
                 {repeat ? (
                   <Svg
                     viewBox="0 0 24 24"
-                    width="30"
-                    height="30"
-                    style={{ marginTop: 10 }}
+                    width="24"
+                    height="24"
+                    style={{ marginRight: 10 }}
                   >
                     <Defs></Defs>
                     <Path
@@ -93,6 +84,16 @@ export default function Reminder({
                 ) : (
                   ''
                 )}
+
+                <Text
+                  style={{
+                    color: 'white',
+                    fontFamily: 'raleway-regular',
+                    fontSize: 20,
+                  }}
+                >
+                  {`${hours}h ${minutes}m`}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>

@@ -9,7 +9,7 @@ import {
 import tw from 'tailwind-react-native-classnames';
 import SelectDropdown from 'react-native-select-dropdown';
 import { CheckBox } from '@rneui/themed';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TForm, TReminder } from './App.types';
 import { faker } from '@faker-js/faker';
 
@@ -22,6 +22,8 @@ export default function Form({
   onDelete = () => {},
   edit,
 }: TForm) {
+  const [dirtyHours, setDirtyHours] = useState(false);
+  const [dirtyMinutes, setDirtyMinutes] = useState(false);
   const [reminder, setReminder] = useState<TReminder>(
     edit || {
       name: '',
@@ -32,6 +34,14 @@ export default function Form({
       created: new Date(),
     },
   );
+  const enabled = !edit;
+
+  useEffect(() => {
+    return () => {
+      setDirtyHours(false);
+      setDirtyMinutes(false);
+    };
+  }, []);
 
   return (
     <ScrollView style={{ height: '72%', overflow: 'scroll' }}>
@@ -45,11 +55,17 @@ export default function Form({
           alignItems: 'center',
           width: '100%',
         }}
+        pointerEvents={enabled ? 'auto' : 'none'}
       >
         <TextInput
           placeholder="Name"
           style={[
             tw`border text-sm rounded-lg w-full p-2.5 bg-gray-700 border-gray-600 text-white`,
+            {
+              fontFamily: 'raleway-regular',
+              color: '#FFF',
+              fontSize: 14,
+            },
           ]}
           defaultValue={reminder.name}
           onChangeText={(name) =>
@@ -58,6 +74,8 @@ export default function Form({
               name,
             })
           }
+          editable={enabled}
+          selectTextOnFocus={enabled}
         />
       </View>
       <View
@@ -72,63 +90,55 @@ export default function Form({
         }}
       >
         <SelectDropdown
-          defaultValue={reminder.hours}
-          onChangeSearchInputText={() =>
-            setReminder({
-              ...reminder,
-              hours: reminder.hours,
-            })
-          }
+          defaultValue={edit || dirtyHours ? reminder.hours : undefined}
+          onChangeSearchInputText={() => {}}
           data={hoursOptions}
           onSelect={(hours) => {
             setReminder({
               ...reminder,
               hours,
             });
+            setDirtyHours(true);
           }}
           defaultButtonText={'Hours'}
-          buttonTextAfterSelection={(selectedItem) => {
-            return selectedItem;
-          }}
-          rowTextForSelection={(item) => {
-            return item;
-          }}
+          buttonTextAfterSelection={(selectedItem) => selectedItem}
+          rowTextForSelection={(item) => item}
           buttonStyle={styles.dropdown2BtnStyle}
-          buttonTextStyle={styles.dropdown2BtnTxtStyle}
+          buttonTextStyle={{
+            ...styles.dropdown2BtnTxtStyle,
+            color: edit || dirtyHours ? '#FFF' : '#6a6f7c',
+          }}
           dropdownIconPosition={'right'}
           dropdownStyle={styles.dropdown2DropdownStyle}
           rowStyle={styles.dropdown2RowStyle}
           rowTextStyle={styles.dropdown2RowTxtStyle}
+          disabled={!enabled}
         />
 
         <SelectDropdown
           defaultValue={reminder.minutes}
-          onChangeSearchInputText={() =>
-            setReminder({
-              ...reminder,
-              minutes: reminder.minutes,
-            })
-          }
+          onChangeSearchInputText={() => {}}
           data={minutesOptions}
           onSelect={(minutes) => {
             setReminder({
               ...reminder,
               minutes,
             });
+            setDirtyMinutes(true);
           }}
           defaultButtonText={'Minutes'}
-          buttonTextAfterSelection={(selectedItem) => {
-            return selectedItem;
-          }}
-          rowTextForSelection={(item) => {
-            return item;
-          }}
+          buttonTextAfterSelection={(selectedItem) => selectedItem}
+          rowTextForSelection={(item) => item}
           buttonStyle={styles.dropdown2BtnStyle}
-          buttonTextStyle={styles.dropdown2BtnTxtStyle}
+          buttonTextStyle={{
+            ...styles.dropdown2BtnTxtStyle,
+            color: edit || dirtyMinutes ? '#FFF' : '#6a6f7c',
+          }}
           dropdownIconPosition={'right'}
           dropdownStyle={styles.dropdown2DropdownStyle}
           rowStyle={styles.dropdown2RowStyle}
           rowTextStyle={styles.dropdown2RowTxtStyle}
+          disabled={!enabled}
         />
       </View>
       <View
@@ -147,13 +157,18 @@ export default function Form({
           checked={reminder.repeat}
           title="Repeat?"
           containerStyle={{ backgroundColor: '#202936' }}
-          textStyle={{ color: '#9CA3AF' }}
+          textStyle={{
+            color: '#FFF',
+            fontFamily: 'raleway-regular',
+            fontSize: 14,
+          }}
           onPress={() =>
             setReminder({
               ...reminder,
               repeat: !reminder.repeat,
             })
           }
+          disabled={!enabled}
         />
       </View>
 
@@ -275,7 +290,7 @@ const styles = StyleSheet.create({
     width: '43%',
   },
   dropdown2BtnTxtStyle: {
-    color: '#9CA3AF',
+    color: '#FFF',
     textAlign: 'center',
     fontWeight: 'normal',
     fontFamily: 'raleway-regular',
