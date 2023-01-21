@@ -14,7 +14,7 @@ import { TForm, TReminder } from './App.types';
 import { faker } from '@faker-js/faker';
 
 const hoursOptions = [...Array(25).keys()];
-const minutesOptions = [...Array(60).keys()].map((i) => i + 1);
+const minutesOptions = [...Array(61).keys()].map((i) => i + 1);
 
 export default function Form({
   onClose = () => {},
