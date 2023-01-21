@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { TForm, TReminder } from './App.types';
 import { faker } from '@faker-js/faker';
 
-const hoursOptions = [...Array(13).keys()];
+const hoursOptions = [...Array(25).keys()];
 const minutesOptions = [...Array(60).keys()].map((i) => i + 1);
 
 export default function Form({
