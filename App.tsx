@@ -236,6 +236,7 @@ async function schedulePushNotification(data: TReminder) {
       title: 'Hey! Just a heads up! 👋',
       body: data.name,
       data,
+      sound: true,
     },
     trigger: {
       seconds: toSeconds(data.hours, data.minutes, data.seconds),
