@@ -12,6 +12,7 @@ import { CheckBox } from '@rneui/themed';
 import { useEffect, useState } from 'react';
 import { TForm, TReminder } from './App.types';
 import { faker } from '@faker-js/faker';
+import AppStyles from './App.styles';
 
 const hoursOptions = [...Array(25).keys()];
 const minutesOptions = [...Array(61).keys()].map((i) => i + 1);
@@ -19,7 +20,6 @@ const minutesOptions = [...Array(61).keys()].map((i) => i + 1);
 export default function Form({
   onClose = () => {},
   onSave = () => {},
-  onDelete = () => {},
   edit,
 }: TForm) {
   const [dirtyHours, setDirtyHours] = useState(false);
@@ -32,6 +32,7 @@ export default function Form({
       seconds: 0,
       repeat: false,
       created: new Date(),
+      done: false,
     },
   );
   const enabled = !edit;
@@ -44,28 +45,16 @@ export default function Form({
   }, []);
 
   return (
-    <ScrollView style={{ height: '72%', overflow: 'scroll' }}>
+    <ScrollView style={AppStyles.form}>
       <View
-        style={{
-          borderTopWidth: 1,
-          borderColor: '#48484A',
-          padding: 18,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-        }}
+        style={AppStyles.formInputBox}
         pointerEvents={enabled ? 'auto' : 'none'}
       >
         <TextInput
           placeholder="Name"
           style={[
-            tw`border text-sm rounded-lg w-full p-2.5 bg-gray-700 border-gray-600 text-white`,
-            {
-              fontFamily: 'raleway-regular',
-              color: '#FFF',
-              fontSize: 14,
-            },
+            tw`border text-sm rounded-lg w-full p-2.5 pb-3.5 bg-gray-700 border-gray-600 text-white`,
+            AppStyles.formInput,
           ]}
           defaultValue={reminder.name}
           onChangeText={(name) =>
@@ -78,17 +67,8 @@ export default function Form({
           selectTextOnFocus={enabled}
         />
       </View>
-      <View
-        style={{
-          borderTopWidth: 1,
-          borderColor: '#48484A',
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          paddingTop: 20,
-          paddingBottom: 20,
-        }}
-      >
+
+      <View style={AppStyles.formDropdownBox}>
         <SelectDropdown
           defaultValue={edit || dirtyHours ? reminder.hours : undefined}
           onChangeSearchInputText={() => {}}
@@ -103,15 +83,17 @@ export default function Form({
           defaultButtonText={'Hours'}
           buttonTextAfterSelection={(selectedItem) => selectedItem}
           rowTextForSelection={(item) => item}
-          buttonStyle={styles.dropdown2BtnStyle}
+          buttonStyle={AppStyles.formDropdownButton}
           buttonTextStyle={{
-            ...styles.dropdown2BtnTxtStyle,
-            color: edit || dirtyHours ? '#FFF' : '#6a6f7c',
+            ...AppStyles.formDropdownButtonText,
+            ...(edit || dirtyHours
+              ? AppStyles.formFieldDirty
+              : AppStyles.formFieldPistine),
           }}
           dropdownIconPosition={'right'}
-          dropdownStyle={styles.dropdown2DropdownStyle}
-          rowStyle={styles.dropdown2RowStyle}
-          rowTextStyle={styles.dropdown2RowTxtStyle}
+          dropdownStyle={AppStyles.formDropdown}
+          rowStyle={AppStyles.formDropdownRow}
+          rowTextStyle={AppStyles.formDropdownRowText}
           disabled={!enabled}
         />
 
@@ -129,39 +111,27 @@ export default function Form({
           defaultButtonText={'Minutes'}
           buttonTextAfterSelection={(selectedItem) => selectedItem}
           rowTextForSelection={(item) => item}
-          buttonStyle={styles.dropdown2BtnStyle}
+          buttonStyle={AppStyles.formDropdownButton}
           buttonTextStyle={{
-            ...styles.dropdown2BtnTxtStyle,
-            color: edit || dirtyMinutes ? '#FFF' : '#6a6f7c',
+            ...AppStyles.formDropdownButtonText,
+            ...(edit || dirtyMinutes
+              ? AppStyles.formFieldDirty
+              : AppStyles.formFieldPistine),
           }}
           dropdownIconPosition={'right'}
-          dropdownStyle={styles.dropdown2DropdownStyle}
-          rowStyle={styles.dropdown2RowStyle}
-          rowTextStyle={styles.dropdown2RowTxtStyle}
+          dropdownStyle={AppStyles.formDropdown}
+          rowStyle={AppStyles.formDropdownRow}
+          rowTextStyle={AppStyles.formDropdownRowText}
           disabled={!enabled}
         />
       </View>
-      <View
-        style={{
-          borderTopWidth: 1,
-          borderColor: '#48484A',
-          padding: 10,
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: '100%',
-        }}
-      >
+
+      <View style={AppStyles.formCheckboxBox}>
         <CheckBox
           checked={reminder.repeat}
           title="Repeat?"
-          containerStyle={{ backgroundColor: '#202936' }}
-          textStyle={{
-            color: '#FFF',
-            fontFamily: 'raleway-regular',
-            fontSize: 14,
-          }}
+          containerStyle={{ backgroundColor: 'transparent' }}
+          textStyle={AppStyles.formCheckboxText}
           onPress={() =>
             setReminder({
               ...reminder,
@@ -172,101 +142,47 @@ export default function Form({
         />
       </View>
 
-      <View
-        style={{
-          borderTopWidth: 1,
-          borderColor: '#48484A',
-          paddingTop: 20,
-          paddingBottom: 20,
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-        }}
-      >
+      <View style={AppStyles.formActions}>
         <TouchableOpacity
           style={[
             tw`text-white bg-blue-700 font-medium rounded-md text-sm w-full px-5 py-4 text-center`,
-            {
-              backgroundColor: 'transparent',
-              borderColor: '#2089DC',
-              width: '40%',
-              borderWidth: 2,
-            },
+            { ...AppStyles.formCancel },
           ]}
           activeOpacity={0.7}
           onPress={onClose}
         >
-          <Text
-            style={{
-              textAlign: 'center',
-              fontWeight: '500',
-              fontSize: 18,
-              fontFamily: 'raleway-bold',
-              color: '#2089DC',
-            }}
-          >
-            Cancel
-          </Text>
+          <Text style={AppStyles.formCancelText}>CANCEL</Text>
         </TouchableOpacity>
 
-        {edit ? (
-          <TouchableOpacity
-            style={[
-              tw`text-white bg-blue-700 font-medium rounded-md text-sm w-full px-5 py-4 text-center`,
-              {
-                backgroundColor: '#B30000',
-                width: '40%',
-              },
-            ]}
-            activeOpacity={0.7}
-            onPress={() => onDelete(edit)}
-          >
-            <Text
-              style={{
-                textAlign: 'center',
-                fontWeight: '500',
-                fontSize: 18,
-                fontFamily: 'raleway-bold',
-                color: '#fff',
-              }}
-            >
-              Delete
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[
-              tw`text-white bg-blue-700 font-medium rounded-md text-sm w-full px-5 py-4 text-center`,
-              {
-                backgroundColor: '#30D158',
-                width: '40%',
-              },
-            ]}
-            activeOpacity={0.7}
-            onPress={() => {
-              if (reminder.name && (reminder.hours || reminder.minutes)) {
-                const newReminder = {
-                  ...reminder,
-                  id: reminder.id || faker.datatype.uuid(),
-                  created: new Date(),
-                };
-                onSave(newReminder);
-              }
+        <TouchableOpacity
+          style={[
+            tw`text-white bg-blue-700 font-medium rounded-md text-sm w-full px-5 py-4 text-center`,
+            {
+              ...AppStyles.formSave,
+              ...AppStyles.buttonCommon,
+            },
+          ]}
+          activeOpacity={0.7}
+          onPress={() => {
+            if (reminder.name && (reminder.hours || reminder.minutes)) {
+              const newReminder = {
+                ...reminder,
+                id: reminder.id || faker.datatype.uuid(),
+                created: new Date(),
+              };
+              onSave(newReminder);
+            }
+          }}
+        >
+          <Text
+            style={{
+              ...AppStyles.formSaveText,
+              ...AppStyles.buttonTextCommon,
             }}
           >
-            <Text
-              style={{
-                textAlign: 'center',
-                fontWeight: '500',
-                fontSize: 18,
-                fontFamily: 'raleway-bold',
-              }}
-            >
-              Save
-            </Text>
-          </TouchableOpacity>
-        )}
+            SAVE
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View

@@ -5,6 +5,7 @@ export type TReminder = {
   minutes: number;
   seconds: number;
   repeat: boolean;
+  done: boolean;
   created: Date;
   identifier?: string;
 };
@@ -20,3 +21,7 @@ export type TReminderItem = {
   onPress?: (reminder: TReminder) => void;
   reminders: TReminder[];
 };
+
+export type TIcons = {
+  status: 'repeat' | 'once' | 'done'
+}

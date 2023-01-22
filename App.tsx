@@ -1,16 +1,11 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
-import {
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import Form from './Form';
 import Reminders from './Reminders';
 import { TReminder } from './App.types';
+import AppStyles from './App.styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Subscription } from 'expo-modules-core';
@@ -99,26 +94,9 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider>
-        <View
-          style={{
-            backgroundColor: '#202936',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <View style={{ borderWidth: 1, flex: 1 }}>
-            <Text
-              style={{
-                marginTop: '20%',
-                marginBottom: 40,
-                textAlign: 'center',
-                fontSize: 38,
-                color: '#fff',
-                fontFamily: 'raleway-bold',
-              }}
-            >
+        <View style={AppStyles.mainBox}>
+          <View style={AppStyles.subBox}>
+            <Text style={AppStyles.title}>
               {openForm
                 ? editReminder
                   ? 'Reminder'
@@ -127,15 +105,13 @@ export default function App() {
             </Text>
 
             {!openForm ? (
-              <ScrollView style={{ height: '72%', overflow: 'scroll' }}>
-                <Reminders
-                  reminders={reminders}
-                  onPress={(reminder) => {
-                    setEditReminder(reminder);
-                    setOpenForm(true);
-                  }}
-                />
-              </ScrollView>
+              <Reminders
+                reminders={reminders}
+                onPress={(reminder) => {
+                  setEditReminder(reminder);
+                  setOpenForm(true);
+                }}
+              />
             ) : (
               <Form
                 onClose={() => {
@@ -186,37 +162,13 @@ export default function App() {
           </View>
 
           {!openForm ? (
-            <View
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
+            <View style={AppStyles.addBox}>
               <TouchableOpacity
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  position: 'relative',
-                  width: 80,
-                  height: 80,
-                  borderRadius: 100,
-                  marginTop: '-30%',
-                  marginBottom: 0,
-                  backgroundColor: '#30D158',
-                }}
+                style={AppStyles.addTouch}
                 activeOpacity={0.7}
                 onPress={() => setOpenForm(!openForm)}
               >
-                <Text
-                  style={{
-                    fontSize: 60,
-                    marginTop: !openForm ? -6 : 6,
-                    color: '#fff',
-                  }}
-                >
-                  +
-                </Text>
+                <Text style={AppStyles.buttonText}>+</Text>
               </TouchableOpacity>
             </View>
           ) : null}
